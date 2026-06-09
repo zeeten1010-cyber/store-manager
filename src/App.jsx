@@ -257,6 +257,141 @@ function exportSchedulePDF(emps, shifts, yr, mo) {
   }
 }
 
+function exportContractPDF(c) {
+  const fmt = (v) => v || "";
+  const chk = (v) => v ? "☑" : "☐";
+  const fmtDate = (d) => d ? d.replace(/-/g, ".") : "　　　　";
+  const fmtTime = (t) => t ? t.replace(":", "시 ") + "분" : "　　시 　　분";
+  const workDaysDisplay = (c.workDays || "").split(",").filter(Boolean).join(", ") || "　　　　";
+
+  const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>근로계약서 - ${c.empName}</title>
+<style>
+  @page { size: A4; margin: 20mm 18mm; }
+  @media print { body { margin: 0; } }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: '맑은 고딕', 'Malgun Gothic', 'Noto Sans KR', sans-serif; font-size: 11px; line-height: 1.6; color: #000; }
+  h1 { text-align: center; font-size: 22px; letter-spacing: 12px; margin-bottom: 24px; padding-bottom: 12px; }
+  .intro { margin-bottom: 20px; font-size: 11px; line-height: 1.8; }
+  .section { margin-bottom: 16px; }
+  .section-title { font-size: 12px; font-weight: bold; margin-bottom: 6px; }
+  table { width: 100%; border-collapse: collapse; margin-bottom: 4px; }
+  td, th { border: 1px solid #000; padding: 6px 10px; font-size: 11px; vertical-align: top; }
+  .th { background: #F5F5F5; font-weight: bold; width: 28%; text-align: center; vertical-align: middle; }
+  .note { font-size: 10px; color: #555; margin-top: 4px; margin-left: 2px; }
+  .fixed-text { margin-bottom: 14px; font-size: 11px; line-height: 1.8; padding-left: 8px; }
+  .sign-section { margin-top: 20px; }
+  .sign-title { font-size: 12px; font-weight: bold; margin-bottom: 8px; }
+  .sign-line { display: flex; gap: 8px; align-items: center; margin-bottom: 4px; }
+  .printbar { position: fixed; top: 0; left: 0; right: 0; background: #2D2016; padding: 10px 16px; display: flex; justify-content: space-between; align-items: center; z-index: 9999; }
+  @media print { .printbar, .printbar + div { display: none !important; } }
+</style></head><body>
+
+<div id="printbar" class="printbar">
+  <span style="color:#fff;font-size:14px;font-weight:700">근로계약서 - ${c.empName}</span>
+  <div style="display:flex;gap:8px">
+    <button onclick="document.getElementById('printbar').style.display='none';window.print();setTimeout(()=>document.getElementById('printbar').style.display='flex',500)" style="padding:8px 16px;background:#C4956A;color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer">🖨 인쇄 / PDF 저장</button>
+    <button onclick="window.close()" style="padding:8px 16px;background:#555;color:#fff;border:none;border-radius:6px;font-size:13px;cursor:pointer">✕ 닫기</button>
+  </div>
+</div>
+<div style="height:50px"></div>
+
+<h1>근 로 계 약 서</h1>
+
+<div class="intro">
+  <strong>팔팔너구리해장</strong> (이하 "사업주"라 함)과(와) <strong>${fmt(c.empName)}</strong> (이하 "근로자"라 함)은 다음과 같이 근로계약을 체결한다.
+</div>
+
+<div class="section">
+  <div class="section-title">1. 근로계약기간</div>
+  <table><tr>
+    <td class="th">계약기간</td>
+    <td>${fmtDate(c.startDate)} ~ ${fmtDate(c.endDate)}</td>
+  </tr></table>
+  <div class="note">※ 근로계약기간을 정하지 않는 경우에는 "근로개시일"만 기재</div>
+</div>
+
+<div class="section">
+  <div class="section-title">2. 근무장소</div>
+  <table><tr>
+    <td class="th">근무장소</td>
+    <td>팔팔너구리해장 신당본점</td>
+  </tr></table>
+</div>
+
+<div class="section">
+  <div class="section-title">3. 업무내용</div>
+  <table><tr>
+    <td class="th">업무내용</td>
+    <td>홀서빙, 청소, 기타( ${fmt(c.extraTask)} )</td>
+  </tr></table>
+</div>
+
+<div class="section">
+  <div class="section-title">4. 소정근로시간 및 근무일</div>
+  <table>
+    <tr><td class="th">근로시간</td><td>${fmtTime(c.workStart)} ~ ${fmtTime(c.workEnd)} (휴게시간 : ${fmtTime(c.breakStart)} ~ ${fmtTime(c.breakEnd)})</td></tr>
+    <tr><td class="th">근무일</td><td>매주 ${workDaysDisplay} (주 ${fmt(c.workDaysCount)}일 근무)</td></tr>
+  </table>
+  <div class="note">※ 근무 스케줄 변동에 관한 사항<br>사업장 운영 상황에 따라 근무일 및 근로시간이 변동될 수 있으며, 이 경우 사업주는 근로자에게 최소 1일 전까지 변경된 근무 스케줄을 서면(문자, 메신저 등 포함)으로 협의하여야 한다. 다만, 근로자의 동의 없이 소정근로시간의 총량을 일방적으로 변경할 수 없다.</div>
+</div>
+
+<div class="section">
+  <div class="section-title">5. 임금</div>
+  <table>
+    <tr><td class="th">시급</td><td>${c.wage ? Number(c.wage).toLocaleString() + "원" : "　　　　원"}</td></tr>
+    <tr><td class="th">임금지급일</td><td>익월 10일 (휴일인 경우 전일 지급)</td></tr>
+    <tr><td class="th">지급방법</td><td>근로자 명의 예금통장에 입금</td></tr>
+  </table>
+  <div class="note">※ 2026년 최저임금: 시간급 10,320원</div>
+</div>
+
+<div class="section">
+  <div class="section-title">6. 사회보험 적용 여부</div>
+  <table><tr>
+    <td style="border:1px solid #000;padding:8px 10px">${chk(c.insEmp)} 고용보험&nbsp;&nbsp;&nbsp;${chk(c.insInd)} 산재보험&nbsp;&nbsp;&nbsp;${chk(c.insPen)} 국민연금&nbsp;&nbsp;&nbsp;${chk(c.insHth)} 건강보험</td>
+  </tr></table>
+</div>
+
+<div class="section">
+  <div class="section-title">7. 근로계약서 교부</div>
+  <div class="fixed-text">사업주는 근로계약을 체결함과 동시에 본 계약서를 사본하여 근로자의 교부요구와 관계없이 근로자에게 교부함 (근로기준법 제17조 이행)</div>
+</div>
+
+<div class="section">
+  <div class="section-title">8. 근로계약, 취업규칙 등의 성실한 이행의무</div>
+  <div class="fixed-text">사업주와 근로자는 각자가 근로계약, 취업규칙, 단체협약을 지키고 성실하게 이행하여야 한다.</div>
+</div>
+
+<div class="section">
+  <div class="section-title">9. 기 타</div>
+  <div class="fixed-text">이 계약에 정함이 없는 사항은 근로기준법령에 의한다.</div>
+</div>
+
+<div style="text-align:center;margin:20px 0;font-size:12px">
+  ${fmtDate(c.contractDate) || "　　　년　　　월　　　일"}
+</div>
+
+<div class="sign-section">
+  <table style="margin-bottom:16px">
+    <tr><td colspan="2" style="background:#F5F5F5;font-weight:bold;text-align:center;padding:6px">(사업주)</td></tr>
+    <tr><td class="th">사업체명</td><td>팔팔너구리해장</td></tr>
+    <tr><td class="th">주&nbsp;&nbsp;&nbsp;소</td><td>서울 중구 퇴계로 421 1층 2호</td></tr>
+    <tr><td class="th">대&nbsp;표&nbsp;자</td><td>양두환, 박지현 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (서명)</td></tr>
+  </table>
+  <table>
+    <tr><td colspan="2" style="background:#F5F5F5;font-weight:bold;text-align:center;padding:6px">(근로자)</td></tr>
+    <tr><td class="th">주&nbsp;&nbsp;&nbsp;소</td><td>${fmt(c.empAddr)}</td></tr>
+    <tr><td class="th">연&nbsp;락&nbsp;처</td><td>${fmt(c.empPhone)}</td></tr>
+    <tr><td class="th">성&nbsp;&nbsp;&nbsp;명</td><td>${fmt(c.empName)} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (서명)</td></tr>
+  </table>
+</div>
+
+</body></html>`;
+
+  const w = window.open('', '_blank');
+  if (w) { w.document.write(html); w.document.close(); }
+}
+
 async function api(method, table, opts) {
   const { body, query } = opts || {};
   let url = `${SUPA_URL}/rest/v1/${table}`;
@@ -1159,6 +1294,7 @@ function ContractTab() {
                 </div>
               </div>
               <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
+                <B small ghost onClick={() => exportContractPDF(c)}>🖨 출력</B>
                 <B small ghost onClick={() => doOpen(c)}>수정</B>
                 <button onClick={() => doDelete(c.id)} style={{ padding: "6px 10px", borderRadius: 6, border: "1px solid #D95550", background: "#FFF5F5", cursor: "pointer", fontFamily: "inherit", fontSize: 11, fontWeight: 600, color: "#D95550" }}>삭제</button>
               </div>
@@ -1252,6 +1388,7 @@ function ContractTab() {
         <B primary onClick={doSave} disabled={loading} style={{ flex: 1, padding: "14px 0", fontSize: 16 }}>
           {saved ? "✓ 저장 완료!" : loading ? "저장 중..." : "💾 저장하기"}
         </B>
+        {current && <B ghost onClick={() => exportContractPDF(contract)} style={{ padding: "14px 16px" }}>🖨 출력</B>}
         <B ghost onClick={() => setView("list")} style={{ padding: "14px 16px" }}>목록</B>
       </div>
 
