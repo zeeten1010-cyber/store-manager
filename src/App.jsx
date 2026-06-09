@@ -1262,6 +1262,8 @@ function ContractTab() {
   );
 }
 
+const TABS = [{ id: "checklist", label: "체크리스트", icon: "✅" }, { id: "report", label: "매장관리", icon: "📋" }, { id: "schedule", label: "스케줄", icon: "📅" }, { id: "wage", label: "급여계산", icon: "💰" }, { id: "contract", label: "계약서", icon: "📄" }];
+
 function LockScreen({ onUnlock }) {
   const [pw, setPw] = useState("");
   const [err, setErr] = useState(false);
